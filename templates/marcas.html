@@ -1,0 +1,16 @@
+{% extends 'layout.html' %}
+{% block title %}
+    <h2>Web de Telefonitos</h2>
+{% endblock %}
+{% block text %}
+    <form action="" method="post">
+        <input type="text" name="nombre" class="form-control" placeholder="ponelamarca">
+        <button type="submit" class="btn btn-success">enviar</button>
+    </form>
+    {% for marca in marcas%}
+        <li>
+            {{marca.nombre}}
+        </li>
+    {% endfor %}
+{% endblock %}
+
