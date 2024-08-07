@@ -31,7 +31,7 @@ def marcas():
         marca = Marca.query.get(marca_id)
         print(marca)
         if marca:
-            db.session.delete(marca)
+            marca.is_active = 0
             db.session.commit()
             return jsonify({"message": f"La marca se eliminó correctamente"}), 200
         else:
