@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/flask_phone_shop'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@localhost:8889/flask_phone_shop'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -53,3 +53,34 @@ def marcas():
 
     marcas = Marca.query.all()
     return render_template("marcas.html", marcas=marcas)
+
+@app.route("/fabricantes", methods=['POST', 'GET'])
+def fabricantes():
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        pais_origen = request.form['pais_origen']
+        nuevo_fabricante = Fabricante(
+            nombre=nombre, 
+            pais_origen=pais_origen
+        )
+        db.session.add(nuevo_fabricante)
+        db.session.commit()
+
+    fabricantes = Fabricante.query.all()
+    return render_template("fabricantes.html", fabricantes=fabricantes)
+
+@app.route("/modelos", methods=['POST', 'GET'])
+def modelos():
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        fabricante_id = request.form['fabricante_id']
+        nuevo_modelo = Modelo(
+            nombre=nombre, 
+            fabricante_id=fabricante_id
+        )
+        db.session.add(nuevo_modelo)
+        db.session.commit()
+
+    modelos = Modelo.query.all()
+    fabricantes = Fabricante.query.all()
+    return render_template("modelos.html", modelos=modelos, fabricantes=fabricantes)

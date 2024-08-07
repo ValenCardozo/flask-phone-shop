@@ -1,0 +1,38 @@
+{% extends 'layout.html' %}
+{% block title %}
+    <h2>CRUD de Modelos</h2>
+{% endblock %}
+{% block text %}
+    <form action="" method="post">
+        Nombre: <input type="text" name="nombre" class="form-control" placeholder="nombre del fabricante">
+        Fabricante: <select name="fabricante_id" class="form-control">
+            {% for fabricante in fabricantes %}
+                <option value="{{ fabricante.id }}">{{ fabricante.nombre }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-success">Enviar</button>
+    </form>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Descripción</th>
+                <th>Fabricante</th>
+                <th>País</th>
+                <th>Editar</th>
+                <th>Borrar</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for modelo in modelos %}
+                <tr>
+                    <td>{{ modelo.nombre }}</td>
+                    <td>{{ modelo.fabricante.nombre }}</td>
+                    <td>{{ modelo.fabricante.pais_origen }}</td>
+                    <td><button class="btn btn-primary btn-sm">Editar</button></td>
+                    <td><button class="btn btn-danger btn-sm">Borrar</button></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+

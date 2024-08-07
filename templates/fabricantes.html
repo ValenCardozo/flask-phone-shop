@@ -1,0 +1,17 @@
+{% extends 'layout.html' %}
+{% block title %}
+    <h2>CRUD de Fabricantes</h2>
+{% endblock %}
+{% block text %}
+    <form action="" method="post">
+        Nombre: <input type="text" name="nombre" class="form-control" placeholder="nombre del fabricante">
+        Pais: <input type="text" name="pais_origen" class="form-control" placeholder="pais de origen del fabricante">
+        <button type="submit" class="btn btn-success">Enviar</button>
+    </form>
+    {% for fabricante in fabricantes%}
+        <li>
+            {{fabricante.nombre}} / {{fabricante.pais_origen}}
+        </li>
+    {% endfor %}
+{% endblock %}
+
