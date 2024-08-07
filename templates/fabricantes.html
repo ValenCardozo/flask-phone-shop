@@ -13,5 +13,26 @@
             {{fabricante.nombre}} / {{fabricante.pais_origen}}
         </li>
     {% endfor %}
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Descripción</th>
+                <th>Pais</th>
+                <th>Editar</th>
+                <th>Borrar</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fabricante in fabricantes%}
+                <tr>
+                    <td>{{fabricante.nombre}}</td>
+                    <td>{{fabricante.pais_origen}}</td>
+                    <td><button class="btn btn-primary btn-sm">Editar</button></td>
+                    <td><button class="btn btn-danger btn-sm">Borrar</button></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 {% endblock %}
 
