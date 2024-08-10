@@ -98,7 +98,7 @@ def fabricantes():
     fabricantes = Fabricante.query.filter_by(is_active=1).all()
     return render_template("fabricantes.html", fabricantes=fabricantes)
 
-@app.route("/modelos", methods=['POST', 'GET'])
+@app.route("/modelos", methods=['POST', 'GET', 'DELETE', 'PUT'])
 def modelos():
     if request.method == 'POST':
         nombre = request.form['nombre']
@@ -110,6 +110,37 @@ def modelos():
         db.session.add(nuevo_modelo)
         db.session.commit()
 
-    modelos = Modelo.query.all()
-    fabricantes = Fabricante.query.all()
+    elif request.method == 'DELETE':
+        modelo_id = request.json.get('id')
+        if not modelo_id:
+            return jsonify({"error": "ID is required"}), 400
+
+        modelo = Modelo.query.get(modelo_id)
+        if modelo:
+            modelo.is_active = 0
+            db.session.commit()
+            return jsonify({"message": f"El modelo se eliminó correctamente"}), 200
+        else:
+            return jsonify({"error": f"modelo with ID {modelo_id} not found"}), 404
+
+    elif request.method == 'PUT':
+        modelo_id = request.json.get('id')
+        nuevo_nombre = request.json.get('nombre')
+        nuevo_fabricante = request.json.get('fabricante_id')
+        if not modelo_id or not nuevo_nombre:
+            return jsonify({"error": "ID and new name are required"}), 400
+
+        modelo = Modelo.query.get(modelo_id)
+        if modelo:
+            modelo.nombre = nuevo_nombre
+            modelo.fabricante_id = nuevo_fabricante
+            db.session.commit()
+            return jsonify({"message": f"fabricante with ID {modelo.id} updated successfully"}), 200
+        else:
+            return jsonify({"error": f"fabricante with ID {modelo.id} not found"}), 404
+
+    modelos = Modelo.query.filter_by(is_active=1).all()
+    fabricantes = Fabricante.query.filter_by(is_active=1).all()
     return render_template("modelos.html", modelos=modelos, fabricantes=fabricantes)
+
+
