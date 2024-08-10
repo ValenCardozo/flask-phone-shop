@@ -53,7 +53,7 @@
                 .then(response => response.json())
                 .then(data => {
                     alert(data.message);
-                    location.reload();
+                    window.location.href = '/fabricantes';
                 })
                 .catch((error) => {
                     console.error('Error:', error);
@@ -82,7 +82,7 @@
             .then(response => response.json())
             .then(data => {
                 alert(data.message);
-                location.reload();
+                window.location.href = '/fabricantes';
             })
             .catch((error) => {
                 console.error('Error:', error);
