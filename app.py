@@ -222,7 +222,7 @@ def proveedores(id=None):
                     proveedor.contacto = request.form['contacto']
                     db.session.commit()
                     return redirect(url_for('proveedores'))
-                else:
+                else    :
                     return jsonify({"error": f"Proveedor with ID {id} not found"}), 404
             elif method == 'DELETE':
                 proveedor = Proveedor.query.get(id)
@@ -279,3 +279,62 @@ def accesorios(id=None):
 
     accesorios = Accesorio.query.filter_by(is_active=True).all()
     return render_template("accesorios.html", accesorios=accesorios)
+
+@app.route("/equipos", methods=['POST', 'GET', 'DELETE', 'PUT'])
+def equipos():
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        modelo_id = request.form['modelo_id']
+        categoria_id = request.form['categoria_id']
+        costo = request.form['costo']
+        nuevo_equipo = Equipo(
+            nombre=nombre,
+            modelo_id=modelo_id,
+            categoria_id=categoria_id,
+            costo=costo
+        )
+        db.session.add(nuevo_equipo)
+        db.session.commit()
+
+    elif request.method == 'DELETE':
+        equipo_id = request.json.get('id')
+        if not equipo_id:
+            return jsonify({"error": "ID is required"}), 400
+
+        equipo = Equipo.query.get(equipo_id)
+        if equipo:
+            equipo.is_active = False
+            db.session.commit()
+            return jsonify({"message": f"El equipo se eliminó correctamente"}), 200
+        else:
+            return jsonify({"error": f"Equipo with ID {equipo_id} not found"}), 404
+
+    elif request.method == 'PUT':
+        equipo_id = request.json.get('id')
+        nuevo_nombre = request.json.get('nombre')
+        nuevo_modelo = request.json.get('modelo_id')
+        nueva_categoria = request.json.get('categoria_id')
+        nuevo_costo = request.json.get('costo')
+        if not equipo_id or not nuevo_nombre:
+            return jsonify({"error": "ID and new name are required"}), 400
+
+        equipo = Equipo.query.get(equipo_id)
+        if equipo:
+            equipo.nombre = nuevo_nombre
+            equipo.modelo_id = nuevo_modelo
+            equipo.categoria_id = nueva_categoria
+            equipo.costo = nuevo_costo
+            db.session.commit()
+            return jsonify({"message": f"fabricante with ID {equipo.id} updated successfully"}), 200
+        else:
+            return jsonify({"error": f"fabricante with ID {equipo.id} not found"}), 404
+
+    equipos = Equipo.query.filter_by(is_active=True).all()
+    modelos = Modelo.query.filter_by(is_active=True).all()
+    categorias = Categoria.query.filter_by(is_active=True).all()
+    return render_template(
+        "equipos.html",
+        equipos=equipos,
+        modelos=modelos,
+        categorias=categorias    
+    )
