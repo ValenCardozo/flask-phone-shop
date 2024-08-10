@@ -160,7 +160,7 @@ def categorias(id=None):
             elif method == 'DELETE':
                 categoria = Categoria.query.get(id)
                 if categoria:
-                    db.session.delete(categoria)
+                    categoria.is_active = False
                     db.session.commit()
                     return redirect(url_for('categorias'))
                 else:
@@ -172,5 +172,39 @@ def categorias(id=None):
             db.session.commit()
             return redirect(url_for('categorias'))
 
-    categorias = Categoria.query.all()
+    categorias = Categoria.query.filter_by(is_active=True).all()
     return render_template("categorias.html", categorias=categorias)
+
+@app.route("/caracteristicas", methods=['POST', 'GET'])
+@app.route("/caracteristicas/<int:id>", methods=['POST'])
+def caracteristicas(id=None):
+    if request.method == 'POST':
+        if id:
+            method = request.form.get('_method')
+            if method == 'PUT':
+                caracteristica = Caracteristica.query.get(id)
+                if caracteristica:
+                    caracteristica.tipo = request.form['tipo']
+                    caracteristica.descripcion = request.form['descripcion']
+                    db.session.commit()
+                    return redirect(url_for('caracteristicas'))
+                else:
+                    return jsonify({"error": f"Caracteristica with ID {id} not found"}), 404
+            elif method == 'DELETE':
+                caracteristica = Caracteristica.query.get(id)
+                if caracteristica:
+                    caracteristica.is_active = False
+                    db.session.commit()
+                    return redirect(url_for('caracteristicas'))
+                else:
+                    return jsonify({"error": f"Caracteristica with ID {id} not found"}), 404
+        else:
+            tipo = request.form['tipo']
+            descripcion = request.form['descripcion']
+            nueva_caracteristica = Caracteristica(tipo=tipo, descripcion=descripcion)
+            db.session.add(nueva_caracteristica)
+            db.session.commit()
+            return redirect(url_for('caracteristicas'))
+
+    caracteristicas = Caracteristica.query.filter_by(is_active=True).all()
+    return render_template("caracteristicas.html", caracteristicas=caracteristicas)
