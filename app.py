@@ -51,10 +51,10 @@ def marcas():
         else:
             return jsonify({"error": f"Marca with ID {marca_id} not found"}), 404
 
-    marcas = Marca.query.all()
+    marcas = Marca.query.filter_by(is_active=1).all()
     return render_template("marcas.html", marcas=marcas)
 
-@app.route("/fabricantes", methods=['POST', 'GET'])
+@app.route("/fabricantes", methods=['POST', 'GET', 'DELETE', 'PUT'])
 def fabricantes():
     if request.method == 'POST':
         nombre = request.form['nombre']
@@ -66,7 +66,36 @@ def fabricantes():
         db.session.add(nuevo_fabricante)
         db.session.commit()
 
-    fabricantes = Fabricante.query.all()
+    elif request.method == 'DELETE':
+        fabricante_id = request.json.get('id')
+        if not fabricante_id:
+            return jsonify({"error": "ID is required"}), 400
+
+        fabricante = Fabricante.query.get(fabricante_id)
+        if fabricante:
+            fabricante.is_active = 0
+            db.session.commit()
+            return jsonify({"message": f"El fabricante se eliminó correctamente"}), 200
+        else:
+            return jsonify({"error": f"fabricante with ID {fabricante_id} not found"}), 404
+
+    elif request.method == 'PUT':
+        fabricante_id = request.json.get('id')
+        nuevo_nombre = request.json.get('nombre')
+        nuevo_pais_origen = request.json.get('paisOrigen')
+        if not fabricante_id or not nuevo_nombre:
+            return jsonify({"error": "ID and new name are required"}), 400
+
+        fabricante = Fabricante.query.get(fabricante_id)
+        if fabricante:
+            fabricante.nombre = nuevo_nombre
+            fabricante.pais_origen = nuevo_pais_origen
+            db.session.commit()
+            return jsonify({"message": f"fabricante with ID {fabricante_id} updated successfully"}), 200
+        else:
+            return jsonify({"error": f"fabricante with ID {fabricante_id} not found"}), 404
+
+    fabricantes = Fabricante.query.filter_by(is_active=1).all()
     return render_template("fabricantes.html", fabricantes=fabricantes)
 
 @app.route("/modelos", methods=['POST', 'GET'])
