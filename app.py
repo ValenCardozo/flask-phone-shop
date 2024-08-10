@@ -208,3 +208,74 @@ def caracteristicas(id=None):
 
     caracteristicas = Caracteristica.query.filter_by(is_active=True).all()
     return render_template("caracteristicas.html", caracteristicas=caracteristicas)
+
+@app.route("/proveedores", methods=['POST', 'GET'])
+@app.route("/proveedores/<int:id>", methods=['POST'])
+def proveedores(id=None):
+    if request.method == 'POST':
+        if id:
+            method = request.form.get('_method')
+            if method == 'PUT':
+                proveedor = Proveedor.query.get(id)
+                if proveedor:
+                    proveedor.nombre = request.form['nombre']
+                    proveedor.contacto = request.form['contacto']
+                    db.session.commit()
+                    return redirect(url_for('proveedores'))
+                else:
+                    return jsonify({"error": f"Proveedor with ID {id} not found"}), 404
+            elif method == 'DELETE':
+                proveedor = Proveedor.query.get(id)
+                if proveedor:
+                    proveedor.is_active = False
+                    db.session.commit()
+                    return redirect(url_for('proveedores'))
+                else:
+                    return jsonify({"error": f"Proveedor with ID {id} not found"}), 404
+        else:
+            nombre = request.form['nombre']
+            contacto = request.form['contacto']
+            nuevo_proveedor = Proveedor(
+                nombre=nombre,
+                contacto=contacto
+            )
+            db.session.add(nuevo_proveedor)
+            db.session.commit()
+            return redirect(url_for('proveedores'))
+
+    proveedores = Proveedor.query.filter_by(is_active=True).all()
+    return render_template("proveedores.html", proveedores=proveedores)
+
+@app.route("/accesorios", methods=['POST', 'GET'])
+@app.route("/accesorios/<int:id>", methods=['POST'])
+def accesorios(id=None):
+    if request.method == 'POST':
+        if id:
+            method = request.form.get('_method')
+            if method == 'PUT':
+                accesorio = Accesorio.query.get(id)
+                if accesorio:
+                    accesorio.tipo = request.form['tipo']
+                    db.session.commit()
+                    return redirect(url_for('accesorios'))
+                else:
+                    return jsonify({"error": f"Accesorio with ID {id} not found"}), 404
+            elif method == 'DELETE':
+                accesorio = Accesorio.query.get(id)
+                if accesorio:
+                    accesorio.is_active = False
+                    db.session.commit()
+                    return redirect(url_for('accesorios'))
+                else:
+                    return jsonify({"error": f"Accesorio with ID {id} not found"}), 404
+        else:
+            tipo = request.form['tipo']
+            nuevo_accesorio = Accesorio(
+                tipo=tipo
+            )
+            db.session.add(nuevo_accesorio)
+            db.session.commit()
+            return redirect(url_for('accesorios'))
+
+    accesorios = Accesorio.query.filter_by(is_active=True).all()
+    return render_template("accesorios.html", accesorios=accesorios)
