@@ -51,7 +51,7 @@ def marcas():
         else:
             return jsonify({"error": f"Marca with ID {marca_id} not found"}), 404
 
-    marcas = Marca.query.all()
+    marcas = Marca.query.filter_by(is_active=1).all()
     return render_template("marcas.html", marcas=marcas)
 
 @app.route("/fabricantes", methods=['POST', 'GET', 'DELETE', 'PUT'])
@@ -72,7 +72,6 @@ def fabricantes():
             return jsonify({"error": "ID is required"}), 400
 
         fabricante = Fabricante.query.get(fabricante_id)
-        print(fabricante)
         if fabricante:
             fabricante.is_active = 0
             db.session.commit()
@@ -96,7 +95,7 @@ def fabricantes():
         else:
             return jsonify({"error": f"fabricante with ID {fabricante_id} not found"}), 404
 
-    fabricantes = Fabricante.query.all()
+    fabricantes = Fabricante.query.filter_by(is_active=1).all()
     return render_template("fabricantes.html", fabricantes=fabricantes)
 
 @app.route("/modelos", methods=['POST', 'GET'])

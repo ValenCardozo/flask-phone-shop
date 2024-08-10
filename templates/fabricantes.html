@@ -41,7 +41,7 @@
     <script>
         let currentFabricantesId;
     
-        function deleteFabricantes(id) {
+        function deleteFabricante(id) {
             if (confirm('¿Estás seguro de que quieres borrar este fabricante?')) {
                 fetch('/fabricantes', {
                     method: 'DELETE',
