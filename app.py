@@ -1,9 +1,9 @@
-from flask import Flask, jsonify, render_template, redirect, request
+from flask import Flask, jsonify, render_template, redirect, request, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@localhost:8889/flask_phone_shop'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/flask_phone_shop'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -143,4 +143,34 @@ def modelos():
     fabricantes = Fabricante.query.filter_by(is_active=1).all()
     return render_template("modelos.html", modelos=modelos, fabricantes=fabricantes)
 
+@app.route("/categorias", methods=['POST', 'GET'])
+@app.route("/categorias/<int:id>", methods=['POST'])
+def categorias(id=None):
+    if request.method == 'POST':
+        if id:
+            method = request.form.get('_method')
+            if method == 'PUT':
+                categoria = Categoria.query.get(id)
+                if categoria:
+                    categoria.nombre = request.form['nombre']
+                    db.session.commit()
+                    return redirect(url_for('categorias'))
+                else:
+                    return jsonify({"error": f"Categoria with ID {id} not found"}), 404
+            elif method == 'DELETE':
+                categoria = Categoria.query.get(id)
+                if categoria:
+                    db.session.delete(categoria)
+                    db.session.commit()
+                    return redirect(url_for('categorias'))
+                else:
+                    return jsonify({"error": f"Categoria with ID {id} not found"}), 404
+        else:
+            nombre = request.form['nombre']
+            nueva_categoria = Categoria(nombre=nombre)
+            db.session.add(nueva_categoria)
+            db.session.commit()
+            return redirect(url_for('categorias'))
 
+    categorias = Categoria.query.all()
+    return render_template("categorias.html", categorias=categorias)
