@@ -246,6 +246,49 @@ def proveedores(id=None):
     proveedores = Proveedor.query.filter_by(is_active=True).all()
     return render_template("proveedores.html", proveedores=proveedores)
 
+@app.route("/stock", methods=['POST', 'GET'])
+@app.route("/stock/<int:id>", methods=['POST'])
+def stock(id=None):
+    if request.method == 'POST':
+        if id:
+            method = request.form.get('_method')
+            if method == 'PUT':
+                stock = Stock.query.get(id)
+                if stock:
+                    stock.equipo_id = request.form['equipo']
+                    stock.cantidad_disponible = request.form['cantidad']
+                    stock.ubicacion = request.form['ubicacion']
+                    db.session.commit()
+                    return redirect(url_for('stock'))
+                else:
+                    return jsonify({"error": f"Stock with ID {id} not found"}), 404
+            elif method == 'DELETE':
+                stock = Stock.query.get(id)
+                if stock:
+                    stock.is_active = False
+                    db.session.commit()
+                    return redirect(url_for('stock'))
+                else:
+                    return jsonify({"error": f"Stock with ID {id} not found"}), 404
+        else:
+            equipo = request.form['equipo_id']
+            cantidad = request.form['cantidad']
+            ubicacion = request.form['ubicacion']
+
+            nuevo_stock = Stock(
+                equipo_id=equipo,
+                cantidad_disponible=cantidad,
+                ubicacion=ubicacion
+            )
+
+            db.session.add(nuevo_stock)
+            db.session.commit()
+            return redirect(url_for('stock'))
+
+    stock_list = db.session.query(Stock, Equipo).join(Equipo, Stock.equipo_id==Equipo.id).all()
+    equipos = Equipo.query.filter_by(is_active=True).all()
+    return render_template("stock.html", stock_list=stock_list, equipos=equipos)
+
 @app.route("/accesorios", methods=['POST', 'GET'])
 @app.route("/accesorios/<int:id>", methods=['POST'])
 def accesorios(id=None):

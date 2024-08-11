@@ -26,5 +26,5 @@ Este es un proyecto básico de Flask que incluye migraciones de base de datos co
    ```bash
    flask db init
    flask db migrate -m "init migration"
-   flask db upgrade 
+   flask db upgrade
 
