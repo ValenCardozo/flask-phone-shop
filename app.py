@@ -1,15 +1,21 @@
+import os
 from flask import Flask, jsonify, render_template, redirect, request, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/flask_phone_shop'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = os.urandom(24)
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 from models import Marca, Fabricante, Modelo, Categoria, Caracteristica, Equipo, Stock, Proveedor, Accesorio
+from forms import MarcaForm
 
 @app.route("/")
 def home():
@@ -17,6 +23,8 @@ def home():
 
 @app.route("/marcas", methods=['POST', 'GET', 'DELETE', 'PUT'])
 def marcas():
+    form = MarcaForm()
+
     if request.method == 'POST':
         nombre = request.form['nombre']
         nueva_marca = Marca(nombre=nombre)
@@ -52,7 +60,11 @@ def marcas():
             return jsonify({"error": f"Marca with ID {marca_id} not found"}), 404
 
     marcas = Marca.query.filter_by(is_active=1).all()
-    return render_template("marcas.html", marcas=marcas)
+    return render_template(
+        "marcas.html",
+        marcas=marcas,
+        form=form
+    )
 
 @app.route("/fabricantes", methods=['POST', 'GET', 'DELETE', 'PUT'])
 def fabricantes():

@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField
+from wtforms.fields import StringField, IntegerField, SubmitField
 from wtforms.validators import DataRequired
 
-class MyForm(FlaskForm):
-    name = StringField('name', validators=[DataRequired()])
+class MarcaForm(FlaskForm):
+    nombre = StringField('Nombre', validators=[DataRequired()])
+    submit = SubmitField('Guardar')
