@@ -16,55 +16,75 @@ migrate = Migrate(app, db)
 
 from models import Marca, Fabricante, Modelo, Categoria, Caracteristica, Equipo, Stock, Proveedor, Accesorio
 from forms import MarcaForm
+from services.marca_service import MarcaService
+from repositories.marca_repository import MarcaRepository
 
 @app.route("/")
 def home():
     return render_template("index.html")
 
-@app.route("/marcas", methods=['POST', 'GET', 'DELETE', 'PUT'])
-def marcas():
-    form = MarcaForm()
+# @app.route("/marcas", methods=['POST', 'GET', 'DELETE', 'PUT'])
+# def marcas():
+#     form = MarcaForm()
+
+#     if request.method == 'POST':
+#         nombre = request.form['nombre']
+#         nueva_marca = Marca(nombre=nombre)
+#         db.session.add(nueva_marca)
+#         db.session.commit()
+
+#     elif request.method == 'DELETE':
+#         marca_id = request.json.get('id')
+#         if not marca_id:
+#             return jsonify({"error": "ID is required"}), 400
+
+#         marca = Marca.query.get(marca_id)
+#         print(marca)
+#         if marca:
+#             marca.is_active = 0
+#             db.session.commit()
+#             return jsonify({"message": f"La marca se eliminó correctamente"}), 200
+#         else:
+#             return jsonify({"error": f"Marca with ID {marca_id} not found"}), 404
+
+#     elif request.method == 'PUT':
+#         marca_id = request.json.get('id')
+#         nuevo_nombre = request.json.get('nombre')
+#         if not marca_id or not nuevo_nombre:
+#             return jsonify({"error": "ID and new name are required"}), 400
+
+#         marca = Marca.query.get(marca_id)
+#         if marca:
+#             marca.nombre = nuevo_nombre
+#             db.session.commit()
+#             return jsonify({"message": f"Marca with ID {marca_id} updated successfully"}), 200
+#         else:
+#             return jsonify({"error": f"Marca with ID {marca_id} not found"}), 404
+
+#     marcas = Marca.query.filter_by(is_active=1).all()
+#     return render_template(
+#         "marcas.html",
+#         marcas=marcas,
+#         form=form
+#     )
+
+@app.route("/marca_list", methods=['POST', 'GET'])
+def marcas():   
+    formulario = MarcaForm()
+
+    services = MarcaService(MarcaRepository())
+    marcas = services.get_all()
 
     if request.method == 'POST':
         nombre = request.form['nombre']
-        nueva_marca = Marca(nombre=nombre)
-        db.session.add(nueva_marca)
-        db.session.commit()
+        services.create(nombre=nombre)
+        return redirect(url_for('marcas'))
 
-    elif request.method == 'DELETE':
-        marca_id = request.json.get('id')
-        if not marca_id:
-            return jsonify({"error": "ID is required"}), 400
-
-        marca = Marca.query.get(marca_id)
-        print(marca)
-        if marca:
-            marca.is_active = 0
-            db.session.commit()
-            return jsonify({"message": f"La marca se eliminó correctamente"}), 200
-        else:
-            return jsonify({"error": f"Marca with ID {marca_id} not found"}), 404
-
-    elif request.method == 'PUT':
-        marca_id = request.json.get('id')
-        nuevo_nombre = request.json.get('nombre')
-        if not marca_id or not nuevo_nombre:
-            return jsonify({"error": "ID and new name are required"}), 400
-
-        marca = Marca.query.get(marca_id)
-        if marca:
-            marca.nombre = nuevo_nombre
-            db.session.commit()
-            return jsonify({"message": f"Marca with ID {marca_id} updated successfully"}), 200
-        else:
-            return jsonify({"error": f"Marca with ID {marca_id} not found"}), 404
-
-    marcas = Marca.query.filter_by(is_active=1).all()
     return render_template(
-        "marcas.html",
-        marcas=marcas,
-        form=form
-    )
+        'marca_list.html',
+         marcas=marcas,
+         formulario=formulario
+        )
 
 @app.route("/fabricantes", methods=['POST', 'GET', 'DELETE', 'PUT'])
 def fabricantes():
