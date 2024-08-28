@@ -14,7 +14,7 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-from models import Marca, Fabricante, Modelo, Categoria, Caracteristica, Equipo, Stock, Proveedor, Accesorio
+from models import Marca, Fabricante, Modelo, Categoria, Caracteristica, Equipo, Stock, Proveedor, Accesorio, User
 from forms import MarcaForm
 from services.marca_service import MarcaService
 from repositories.marca_repository import MarcaRepository
@@ -413,3 +413,27 @@ def equipos():
         modelos=modelos,
         categorias=categorias    
     )
+
+@app.route("/users", methods=['POST'])
+def user():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    
+    try:
+        nuevo_user = User(
+            username=username,
+            password=password,
+            is_active=1
+        )
+
+        db.session.add(nuevo_user)
+        db.session.commit()
+
+        return jsonify({
+            "message": f'User {username} is created',
+        }), 201
+    except:
+         return jsonify({
+            "message": 'Algo malio sal',
+        }), 404
