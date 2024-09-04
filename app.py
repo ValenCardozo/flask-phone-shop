@@ -1,8 +1,23 @@
+import bcrypt
 import os
-from flask import Flask, jsonify, render_template, redirect, request, url_for
+from flask import (
+    Flask,
+    jsonify,
+    render_template,
+    redirect,
+    request,
+    url_for
+)
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from dotenv import load_dotenv
+from flask_jwt_extended import (
+    JWTManager,
+)
+from werkzeug.security import (
+    generate_password_hash,
+    check_password_hash
+)
 
 load_dotenv()
 
@@ -13,8 +28,20 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+jwt = JWTManager(app)
 
-from models import Marca, Fabricante, Modelo, Categoria, Caracteristica, Equipo, Stock, Proveedor, Accesorio, User
+from models import(
+    Marca,
+    Fabricante,
+    Modelo,
+    Categoria,
+    Caracteristica,
+    Equipo,
+    Stock,
+    Proveedor,
+    Accesorio,
+    User
+)
 from forms import MarcaForm
 from services.marca_service import MarcaService
 from repositories.marca_repository import MarcaRepository
@@ -420,10 +447,16 @@ def user():
     username = data.get('username')
     password = data.get('password')
     
+    passwordHash = generate_password_hash(
+        password=password,
+        method='pbkdf2',
+        salt_length=8
+    )
+    print(passwordHash)
     try:
         nuevo_user = User(
             username=username,
-            password=password,
+            password=passwordHash,
             is_active=1
         )
 
@@ -434,6 +467,23 @@ def user():
             "message": f'User {username} is created',
         }), 201
     except:
+         return jsonify({
+            "message": 'Algo malio sal',
+        }), 404
+    
+@app.route("/login", methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+
+    user = User.query.filter_by(username=username).first()
+
+    if user and check_password_hash(pwhash=user.password, password=password):
+        return jsonify({
+            "message": f'Login exitoso para {username}',
+        }), 201
+    else:
          return jsonify({
             "message": 'Algo malio sal',
         }), 404
