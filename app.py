@@ -1,5 +1,7 @@
 import bcrypt
 import os
+from datetime import timedelta
+
 from flask import (
     Flask,
     jsonify,
@@ -13,6 +15,10 @@ from flask_migrate import Migrate
 from dotenv import load_dotenv
 from flask_jwt_extended import (
     JWTManager,
+    get_jwt,
+    get_jwt_identity,
+    jwt_required,
+    create_access_token,
 )
 from werkzeug.security import (
     generate_password_hash,
@@ -441,47 +447,56 @@ def equipos():
         categorias=categorias    
     )
 
-@app.route("/users", methods=['POST'])
+@app.route("/users", methods=['POST', 'GET'])
+@jwt_required()
 def user():
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
-    
-    passwordHash = generate_password_hash(
-        password=password,
-        method='pbkdf2',
-        salt_length=8
-    )
-    print(passwordHash)
-    try:
-        nuevo_user = User(
-            username=username,
-            password=passwordHash,
-            is_active=1
+    if request.method == 'POST':
+        data = request.get_json()
+        username = data.get('username')
+        password = data.get('password')
+        
+        passwordHash = generate_password_hash(
+            password=password,
+            method='pbkdf2',
+            salt_length=8
         )
+        print(passwordHash)
+        try:
+            nuevo_user = User(
+                username=username,
+                password=passwordHash,
+                is_active=1
+            )
 
-        db.session.add(nuevo_user)
-        db.session.commit()
+            db.session.add(nuevo_user)
+            db.session.commit()
 
-        return jsonify({
-            "message": f'User {username} is created',
-        }), 201
-    except:
-         return jsonify({
-            "message": 'Algo malio sal',
-        }), 404
+            return jsonify({
+                "message": f'User {username} is created',
+            }), 201
+        except:
+            return jsonify({
+                "message": 'Algo malio sal',
+            }), 404
+    return jsonify({
+        "message": 'Que lindo token pibe',
+    }), 201
     
 @app.route("/login", methods=['POST'])
 def login():
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
+    data = request.authorization
+    username = data.username
+    password = data.password
 
     user = User.query.filter_by(username=username).first()
 
     if user and check_password_hash(pwhash=user.password, password=password):
+        access_token = create_access_token(
+            identity=username,
+            expires_delta=timedelta(minutes=3)
+        ) 
         return jsonify({
-            "message": f'Login exitoso para {username}',
+            "message": f'Login exitoso para {username}, Token: {access_token}',
         }), 201
     else:
          return jsonify({
