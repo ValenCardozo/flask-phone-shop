@@ -450,37 +450,49 @@ def equipos():
 @app.route("/users", methods=['POST', 'GET'])
 @jwt_required()
 def user():
+    
     if request.method == 'POST':
-        data = request.get_json()
-        username = data.get('username')
-        password = data.get('password')
-        
-        passwordHash = generate_password_hash(
-            password=password,
-            method='pbkdf2',
-            salt_length=8
-        )
-        print(passwordHash)
-        try:
-            nuevo_user = User(
-                username=username,
-                password=passwordHash,
-                is_active=1
+        additional_data = get_jwt()
+        admin = additional_data.get('is_admin')
+
+        if admin:    
+            data = request.get_json()
+            username = data.get('username')
+            password = data.get('password')
+            
+            passwordHash = generate_password_hash(
+                password=password,
+                method='pbkdf2',
+                salt_length=8
             )
+            try:
+                nuevo_user = User(
+                    username=username,
+                    password=passwordHash,
+                    is_active=1
+                )
 
-            db.session.add(nuevo_user)
-            db.session.commit()
+                db.session.add(nuevo_user)
+                db.session.commit()
 
-            return jsonify({
-                "message": f'User {username} is created',
-            }), 201
-        except:
-            return jsonify({
-                "message": 'Algo malio sal',
-            }), 404
-    return jsonify({
-        "message": 'Que lindo token pibe',
-    }), 201
+                return jsonify({
+                    "message": f'User {username} is created',
+                }), 201
+            except:
+                return jsonify({
+                    "message": 'Algo malio sal',
+                }), 404
+    users = User.query.all()
+    users_list = []
+    for user in users:
+        users_list.append(
+            dict(
+                username=user.username,
+                is_admin=user.is_admin,
+                id=user.id
+            )
+        )
+    return jsonify(users_list), 201
     
 @app.route("/login", methods=['POST'])
 def login():
@@ -493,7 +505,10 @@ def login():
     if user and check_password_hash(pwhash=user.password, password=password):
         access_token = create_access_token(
             identity=username,
-            expires_delta=timedelta(minutes=3)
+            expires_delta=timedelta(minutes=10),
+            additional_claims=dict(
+                is_admin=user.is_admin,
+            )
         ) 
         return jsonify({
             "message": f'Login exitoso para {username}, Token: {access_token}',
