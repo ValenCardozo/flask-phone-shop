@@ -1,9 +1,27 @@
 import os
-from flask import Flask
+from flask import (
+    Flask,
+    jsonify,
+    render_template,
+    redirect,
+    request,
+    url_for
+)
+from datetime import timedelta
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from dotenv import load_dotenv
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import (
+    JWTManager,
+    get_jwt,
+    get_jwt_identity,
+    jwt_required,
+    create_access_token
+)
+from werkzeug.security import (
+    generate_password_hash,
+    check_password_hash
+)
 from flask_marshmallow import Marshmallow
 
 load_dotenv()
@@ -428,50 +446,78 @@ def equipos():
         "equipos.html",
         equipos=equipos,
         modelos=modelos,
-        categorias=categorias    
+        categorias=categorias
     )
 
 @app.route("/users", methods=['POST'])
+@jwt_required()
 def user():
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
-    
-    passwordHash = generate_password_hash(
-        password=password,
-        method='pbkdf2',
-        salt_length=8
-    )
-    print(passwordHash)
-    try:
-        nuevo_user = User(
-            username=username,
-            password=passwordHash,
-            is_active=1
-        )
+    print(get_jwt_identity())
+    if request.method == 'POST':
+        additional_data = get_jwt()
+        administrador = additional_data.get('administrador')
+        if administrador is True:
+            data = request.get_json()
+            username = data.get('username')
+            password = data.get('password')
 
-        db.session.add(nuevo_user)
-        db.session.commit()
+            passwordHash = generate_password_hash(
+                password=password,
+                method='pbkdf2',
+                salt_length=8
+            )
+            print(passwordHash)
+            try:
+                nuevo_user = User(
+                    username=username,
+                    password=passwordHash,
+                    is_active=1
+                )
 
-        return jsonify({
-            "message": f'User {username} is created',
-        }), 201
-    except:
-         return jsonify({
-            "message": 'Algo malio sal',
-        }), 404
+                db.session.add(nuevo_user)
+                db.session.commit()
+
+                return jsonify({
+                    "message": f'User {username} is created',
+                }), 201
+            except:
+                return jsonify({
+                    "message": 'Algo malio sal',
+                }), 404
+        usuarios = User.query.all()
+        usuarios_list = []
+        for usuario in usuarios:
+            usuarios_list.append(dict(
+                username=usuario.username,
+                is_admin=usuario.is_admin,
+                id=usuario.id
+            ))
+
+        return jsonify(usuarios_list)
+        # return jsonify({
+        #     "message": 'No tienes permisos adm compa',
+        # }), 404
+
+    return jsonify({"usuario creado": "aca iria el listado"}), 200
 
 @app.route("/login", methods=['POST'])
 def login():
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
+    data = request.authorization
+    username = data.username
+    password = data.password
 
     user = User.query.filter_by(username=username).first()
 
     if user and check_password_hash(pwhash=user.password, password=password):
+        access_token = create_access_token(
+            identity=username,
+            expires_delta=timedelta(minutes=10),
+            additional_claims=dict(
+                administrador=user.is_admin
+            )
+        )
         return jsonify({
-            "message": f'Login exitoso para {username}',
+            "message": f'Token {access_token}',
         }), 201
     else:
          return jsonify({
@@ -492,4 +538,4 @@ def users():
         db.session.add(user)
         db.session.commit()
         return jsonify({"message": "Usersitos guarda3"}), 201
->>>>>>> b555aa8 (temp)
+
